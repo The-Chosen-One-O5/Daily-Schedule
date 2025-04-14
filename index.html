@@ -3,443 +3,1246 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Study Schedule - IIT Prep</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <title>Forest Timetable Planner</title>
     <style>
-        body {
+        /* Base Styles */
+        * {
             margin: 0;
-            font-family: 'Comic Sans MS', cursive;
-            color: #e0e0e0;
-            background: url('https://img.freepik.com/premium-photo/lofi-magical-forest-landscape-illustration-background-wallpaper-design-mushrooms-art-generative-ai_877869-12408.jpg') no-repeat center center fixed;
-            background-size: cover;
+            padding: 0;
+            box-sizing: border-box;
+            transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
+            transition-duration: 200ms;
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            background-color: #0f1a0f;
+            color: #ffffff;
             min-height: 100vh;
-            overflow: auto;
-            background-color: #1a2b1a;
+            overflow-x: hidden;
         }
-        .intro-container {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            display: flex;
-            justify-content: center;
-            gap: 2vw;
-            z-index: 1;
-        }
-        .intro-box {
-            background: rgba(34, 51, 34, 0.9);
-            border-radius: 20px;
-            padding: 2vw;
-            width: 20vw;
-            max-width: 200px;
-            text-align: center;
-            cursor: pointer;
-            transition: transform 0.3s ease, background 0.3s ease;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
-        }
-        .intro-box:hover {
-            transform: scale(1.05);
-            background: rgba(51, 77, 51, 0.9);
-        }
-        .intro-box.hidden {
-            display: none;
-        }
-        .full-schedule {
-            display: none;
-            opacity: 0;
-            padding: 2vw;
-            min-height: 100vh;
-            transition: opacity 0.5s ease;
-            justify-content: center;
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            z-index: 2;
-        }
-        .full-schedule.active {
-            display: flex;
-            opacity: 1;
-        }
-        .schedule-box {
-            background: rgba(40, 40, 40, 0.9);
-            border-radius: 25px;
-            padding: 2vw;
-            width: 60vw;
-            max-width: 600px;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.7);
-            max-height: 85vh;
-            overflow-y: auto;
-            position: relative;
-        }
-        .schedule-box::-webkit-scrollbar {
+
+        /* Scrollbar Styles */
+        ::-webkit-scrollbar {
             width: 8px;
+            height: 8px;
         }
-        .schedule-box::-webkit-scrollbar-track {
-            background: #1a1a1a;
+
+        ::-webkit-scrollbar-track {
+            background: #1a2a1a;
         }
-        .schedule-box::-webkit-scrollbar-thumb {
-            background: #333;
-            border-radius: 10px;
+
+        ::-webkit-scrollbar-thumb {
+            background: #3a5a3a;
+            border-radius: 4px;
         }
-        .schedule-box h3 {
-            color: #88b388;
-            text-align: center;
-            margin-top: 0;
-            font-size: 2vw;
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4a6a4a;
         }
-        .schedule-box table {
+
+        /* Container */
+        .container {
             width: 100%;
-            border-collapse: collapse;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+            position: relative;
+            z-index: 10;
         }
-        .schedule-box th, .schedule-box td {
-            padding: 1vw;
-            text-align: left;
-            font-size: 1.2vw;
-        }
-        .close-btn {
-            position: absolute;
-            top: 1vw;
-            right: 1vw;
-            background: none;
-            border: none;
-            color: #ff6666;
-            font-size: 1.2vw;
-            cursor: pointer;
-            transition: transform 0.3s;
-            z-index: 3;
-        }
-        .close-btn:hover {
-            transform: scale(1.2);
-        }
-        .completed {
-            color: #808080;
-            text-decoration: line-through;
-        }
-        .notepad-btn {
-            position: fixed;
-            top: 1vw;
-            left: 1vw;
-            background: rgba(51, 77, 51, 0.9);
-            border: none;
-            padding: 1vw;
-            border-radius: 50%;
-            cursor: pointer;
-            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.5);
-            transition: transform 0.3s;
-            z-index: 3;
-        }
-        .notepad-btn:hover {
-            transform: scale(1.1);
-        }
-        .notepad-popup {
-            display: none;
+
+        /* Background Elements */
+        .bg-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(34, 51, 34, 0.95);
-            padding: 2vw;
-            z-index: 2;
-            overflow-y: auto;
-            transition: opacity 0.5s ease;
-            max-height: 100vh;
+            z-index: 0;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0.8;
         }
-        .notepad-popup.active {
-            display: block;
-            opacity: 1;
+
+        .bg-filter {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(15, 26, 15, 0.4);
+            backdrop-filter: blur(2px);
         }
-        .notepad-popup h2 {
-            text-align: center;
-            color: #88b388;
-            font-size: 2vw;
-        }
-        .notepad-popup .day-section {
-            margin: 1vw 0;
-            padding: 1vw;
-            background: rgba(40, 40, 40, 0.8);
-            border-radius: 15px;
-        }
-        .notepad-popup ul {
-            list-style: none;
-            padding: 0;
-        }
-        .notepad-popup li {
-            padding: 0.5vw;
-            font-size: 1.2vw;
-        }
-        input[type="checkbox"] {
-            appearance: none;
-            width: 2vw;
-            height: 2vw;
-            background: #555;
+
+        .sun {
+            position: absolute;
+            top: 40px;
+            right: 40px;
+            width: 120px;
+            height: 120px;
             border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 236, 173, 1) 0%, rgba(255, 193, 7, 0.7) 50%, transparent 100%);
+            opacity: 0.7;
+            filter: blur(8px);
+            z-index: 1;
+        }
+
+        .moon {
+            position: absolute;
+            top: 40px;
+            right: 40px;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(226, 232, 240, 1) 0%, rgba(148, 163, 184, 0.7) 50%, transparent 100%);
+            opacity: 0.7;
+            filter: blur(8px);
+            z-index: 1;
+        }
+
+        .trees {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 160px;
+            background-color: #0a150a;
+            opacity: 0.4;
+            z-index: 1;
+            mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 1000 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0,200 L0,100 Q50,20 100,100 Q150,20 200,100 Q250,20 300,100 Q350,20 400,100 Q450,20 500,100 Q550,20 600,100 Q650,20 700,100 Q750,20 800,100 Q850,20 900,100 Q950,20 1000,100 L1000,200 Z' fill='%23000'/%3E%3C/svg%3E");
+            mask-size: cover;
+            mask-repeat: no-repeat;
+            -webkit-mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 1000 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0,200 L0,100 Q50,20 100,100 Q150,20 200,100 Q250,20 300,100 Q350,20 400,100 Q450,20 500,100 Q550,20 600,100 Q650,20 700,100 Q750,20 800,100 Q850,20 900,100 Q950,20 1000,100 L1000,200 Z' fill='%23000'/%3E%3C/svg%3E");
+            -webkit-mask-size: cover;
+            -webkit-mask-repeat: no-repeat;
+        }
+
+        /* Firefly Animation */
+        .firefly {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 150, 0.8);
+            box-shadow: 0 0 10px 2px rgba(255, 255, 150, 0.4);
+            z-index: 1;
+            opacity: 0;
+        }
+
+        /* Leaf Animation */
+        .leaf {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            z-index: 1;
+            opacity: 0.7;
+            color: #4a6a4a;
+        }
+
+        /* Card Styles */
+        .card {
+            background-color: rgba(26, 42, 26, 0.8);
+            border: 1px solid #3a5a3a;
+            border-radius: 8px;
+            backdrop-filter: blur(8px);
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-header {
+            padding: 1.5rem 1.5rem 0.75rem;
+            border-bottom: 1px solid #3a5a3a;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #a0d9a0;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card-description {
+            color: #8ab88a;
+            font-size: 0.875rem;
+        }
+
+        .card-content {
+            padding: 1.5rem;
+        }
+
+        .card-footer {
+            padding: 0.75rem 1.5rem 1.5rem;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #a0d9a0;
+            font-weight: 500;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: #243024;
+            border: 1px solid #3a5a3a;
+            border-radius: 6px;
+            color: white;
+            font-size: 1rem;
+        }
+
+        .form-input::placeholder {
+            color: rgba(138, 184, 138, 0.5);
+        }
+
+        .form-textarea {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: #243024;
+            border: 1px solid #3a5a3a;
+            border-radius: 6px;
+            color: white;
+            font-size: 1rem;
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .form-textarea::placeholder {
+            color: rgba(138, 184, 138, 0.5);
+        }
+
+        /* Button Styles */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem 1rem;
+            background-color: #3a5a3a;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn:hover {
+            background-color: #4a6a4a;
+        }
+
+        .btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .btn-full {
+            width: 100%;
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 1px solid #3a5a3a;
+            color: #a0d9a0;
+        }
+
+        .btn-outline:hover {
+            background-color: #3a5a3a;
+            color: white;
+        }
+
+        .btn-sm {
+            padding: 0.25rem 0.75rem;
+            font-size: 0.875rem;
+        }
+
+        /* Icon Styles */
+        .icon {
+            display: inline-block;
+            width: 1.5rem;
+            height: 1.5rem;
+            stroke: currentColor;
+            stroke-width: 2;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .icon-sm {
+            width: 1rem;
+            height: 1rem;
+        }
+
+        .icon-lg {
+            width: 2rem;
+            height: 2rem;
+        }
+
+        /* Tabs */
+        .tabs {
+            margin-bottom: 1rem;
+        }
+
+        .tabs-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            background-color: #1a2a1a;
+            border: 1px solid #3a5a3a;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+
+        .tab-trigger {
+            padding: 0.75rem;
+            text-align: center;
+            cursor: pointer;
+            color: #8ab88a;
+            background-color: transparent;
+            border: none;
+            font-size: 1rem;
+        }
+
+        .tab-trigger.active {
+            background-color: #3a5a3a;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Alert */
+        .alert {
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+        }
+
+        .alert-error {
+            background-color: rgba(220, 38, 38, 0.2);
+            border: 1px solid rgba(220, 38, 38, 0.5);
+            color: rgba(252, 165, 165, 1);
+        }
+
+        /* Badge */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .badge-work {
+            background-color: #3a5a3a;
+            color: white;
+        }
+
+        .badge-study {
+            background-color: #3a4a6a;
+            color: white;
+        }
+
+        .badge-break {
+            background-color: #5a3a5a;
+            color: white;
+        }
+
+        .badge-meal {
+            background-color: #5a5a3a;
+            color: white;
+        }
+
+        /* Checkbox */
+        .checkbox-container {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+        }
+
+        .checkbox {
+            appearance: none;
+            width: 1.25rem;
+            height: 1.25rem;
+            border: 2px solid #4a6a4a;
+            border-radius: 4px;
+            background-color: transparent;
             cursor: pointer;
             position: relative;
-            vertical-align: middle;
-            transition: background 0.3s;
+            margin-top: 0.25rem;
         }
-        input[type="checkbox"]:checked {
-            background: #88b388;
+
+        .checkbox:checked {
+            background-color: #4a6a4a;
         }
-        input[type="checkbox"]:checked::after {
-            content: '✔';
+
+        .checkbox:checked::after {
+            content: '';
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: #fff;
-            font-size: 1.2vw;
+            top: 2px;
+            left: 6px;
+            width: 5px;
+            height: 10px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
         }
-        input[type="checkbox"]:hover {
-            background: #666;
+
+        /* Task Item */
+        .task-item {
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #3a5a3a;
+            background-color: #243024;
+            margin-bottom: 1rem;
+            transition: all 0.3s;
         }
-        @media (max-width: 768px) {
-            .intro-box {
-                width: 40vw;
-                padding: 3vw;
+
+        .task-item.completed {
+            background-color: rgba(36, 48, 36, 0.3);
+            border-color: rgba(58, 90, 58, 0.5);
+        }
+
+        .task-header {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 0.5rem;
+        }
+
+        @media (min-width: 640px) {
+            .task-header {
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
             }
-            .schedule-box {
-                width: 80vw;
-                padding: 3vw;
+        }
+
+        .task-title {
+            font-weight: 500;
+            color: #a0d9a0;
+        }
+
+        .task-title.completed {
+            text-decoration: line-through;
+            opacity: 0.7;
+        }
+
+        .task-time {
+            align-self: flex-start;
+        }
+
+        @media (min-width: 640px) {
+            .task-time {
+                align-self: auto;
             }
-            .schedule-box h3, .notepad-popup h2 {
-                font-size: 4vw;
+        }
+
+        .task-details {
+            font-size: 0.875rem;
+            color: #8ab88a;
+        }
+
+        .task-details.completed {
+            text-decoration: line-through;
+            opacity: 0.7;
+        }
+
+        /* Utility Classes */
+        .text-center {
+            text-align: center;
+        }
+
+        .mb-1 {
+            margin-bottom: 0.25rem;
+        }
+
+        .mb-2 {
+            margin-bottom: 0.5rem;
+        }
+
+        .mb-4 {
+            margin-bottom: 1rem;
+        }
+
+        .mb-8 {
+            margin-bottom: 2rem;
+        }
+
+        .mb-12 {
+            margin-bottom: 3rem;
+        }
+
+        .mt-2 {
+            margin-top: 0.5rem;
+        }
+
+        .mt-4 {
+            margin-top: 1rem;
+        }
+
+        .ml-2 {
+            margin-left: 0.5rem;
+        }
+
+        .mr-2 {
+            margin-right: 0.5rem;
+        }
+
+        .flex {
+            display: flex;
+        }
+
+        .flex-col {
+            flex-direction: column;
+        }
+
+        .items-center {
+            align-items: center;
+        }
+
+        .justify-center {
+            justify-content: center;
+        }
+
+        .justify-between {
+            justify-content: space-between;
+        }
+
+        .justify-end {
+            justify-content: flex-end;
+        }
+
+        .gap-1 {
+            gap: 0.25rem;
+        }
+
+        .gap-2 {
+            gap: 0.5rem;
+        }
+
+        .gap-4 {
+            gap: 1rem;
+        }
+
+        .w-full {
+            width: 100%;
+        }
+
+        .h-full {
+            height: 100%;
+        }
+
+        .min-h-screen {
+            min-height: 100vh;
+        }
+
+        .py-4 {
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+        }
+
+        .py-8 {
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+        }
+
+        .py-16 {
+            padding-top: 4rem;
+            padding-bottom: 4rem;
+        }
+
+        .px-4 {
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+
+        .p-4 {
+            padding: 1rem;
+        }
+
+        .rounded-full {
+            border-radius: 9999px;
+        }
+
+        .opacity-60 {
+            opacity: 0.6;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .grid {
+            display: grid;
+        }
+
+        .grid-cols-1 {
+            grid-template-columns: repeat(1, minmax(0, 1fr));
+        }
+
+        @media (min-width: 768px) {
+            .md\:grid-cols-3 {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
             }
-            .schedule-box th, .schedule-box td, .notepad-popup li {
-                font-size: 2.5vw;
-            }
-            .close-btn {
-                font-size: 2.5vw;
-            }
-            input[type="checkbox"] {
-                width: 3vw;
-                height: 3vw;
-            }
-            input[type="checkbox"]:checked::after {
-                font-size: 2vw;
-            }
+        }
+
+        .feature-card {
+            background-color: rgba(36, 48, 36, 0.5);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid #3a5a3a;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .feature-card:hover {
+            background-color: rgba(36, 48, 36, 0.8);
+            transform: scale(1.05);
+        }
+
+        .feature-icon {
+            color: #a0d9a0;
+            margin-bottom: 0.75rem;
+        }
+
+        .feature-title {
+            font-size: 1.125rem;
+            font-weight: 500;
+            color: #a0d9a0;
+        }
+
+        .feature-description {
+            font-size: 0.875rem;
+            color: #8ab88a;
+            margin-top: 0.5rem;
+        }
+
+        /* Page Specific Styles */
+        .home-page, .setup-page, .planner-page {
+            display: none;
+        }
+
+        .home-page.active, .setup-page.active, .planner-page.active {
+            display: block;
+        }
+
+        /* Animation for confetti */
+        .confetti-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #a0d9a0;
+            opacity: 0;
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            border: 3px solid rgba(160, 217, 160, 0.3);
+            border-radius: 50%;
+            border-top: 3px solid #a0d9a0;
+            width: 1rem;
+            height: 1rem;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 0.5rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Fade In Animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+
+        .delay-1 {
+            animation-delay: 0.1s;
+        }
+
+        .delay-2 {
+            animation-delay: 0.2s;
+        }
+
+        .delay-3 {
+            animation-delay: 0.3s;
         }
     </style>
 </head>
 <body>
-    <button class="notepad-btn" id="notepad-btn"><i class="fas fa-sticky-note"></i></button>
-
-    <!-- Intro Container -->
-    <div class="intro-container" id="intro-container">
-        <div class="intro-box" id="tuition-box">
-            <h2>Tuition Day</h2>
-            <p>Click for Schedule!</p>
+    <!-- Home Page -->
+    <div class="home-page active" id="home-page">
+        <div class="bg-overlay">
+            <div class="bg-filter"></div>
         </div>
-        <div class="intro-box" id="non-tuition-box">
-            <h2>Non-Tuition Day</h2>
-            <p>Click for Schedule!</p>
-        </div>
-    </div>
-
-    <!-- Tuition Schedule -->
-    <div class="full-schedule" id="tuition-schedule">
-        <div class="schedule-box">
-            <button class="close-btn">✖</button>
-            <h3>Tuition Day Schedule</h3>
-            <table>
-                <tr><th>Time</th><th>Activity</th><th>Details</th><th>Done</th></tr>
-                <tr><td>4:30 - 7:00</td><td>Study</td><td>Problem Solving</td><td><input type="checkbox"></td></tr>
-                <tr><td>7:00 - 8:00</td><td>Exercise</td><td></td><td><input type="checkbox"></td></tr>
-                <tr><td>8:00 - 9:00</td><td>Breakfast</td><td></td><td><input type="checkbox"></td></tr>
-                <tr><td>9:00 - 12:00</td><td>Study</td><td>Problem Solving</td><td><input type="checkbox"></td></tr>
-                <tr><td>12:00 - 1:00</td><td>Lunch</td><td></td><td><input type="checkbox"></td></tr>
-                <tr><td>1:00 - 3:00</td><td>Study</td><td>Theory</td><td><input type="checkbox"></td></tr>
-                <tr><td>3:00 - 9:30</td><td>Tuition</td><td></td><td><input type="checkbox"></td></tr>
-                <tr><td>9:30 - 10:30</td><td>Dinner</td><td></td><td><input type="checkbox"></td></tr>
-            </table>
-        </div>
-    </div>
-
-    <!-- Non-Tuition Schedule -->
-    <div class="full-schedule" id="non-tuition-schedule">
-        <div class="schedule-box">
-            <button class="close-btn">✖</button>
-            <h3>Non-Tuition Day Schedule</h3>
-            <table>
-                <tr><th>Time</th><th>Activity</th><th>Details</th><th>Done</th></tr>
-                <tr><td>4:30 - 7:00</td><td>Study</td><td>Problem Solving</td><td><input type="checkbox"></td></tr>
-                <tr><td>7:00 - 8:00</td><td>Exercise</td><td></td><td><input type="checkbox"></td></tr>
-                <tr><td>8:00 - 9:00</td><td>Breakfast</td><td></td><td><input type="checkbox"></td></tr>
-                <tr><td>9:00 - 1:00</td><td>Study</td><td>Theory</td><td><input type="checkbox"></td></tr>
-                <tr><td>1:00 - 2:00</td><td>Lunch</td><td></td><td><input type="checkbox"></td></tr>
-                <tr><td>2:00 - 6:00</td><td>Study</td><td>Problem Solving</td><td><input type="checkbox"></td></tr>
-                <tr><td>6:00 - 7:00</td><td>Dinner</td><td></td><td><input type="checkbox"></td></tr>
-            </table>
-        </div>
-    </div>
-
-    <!-- Notepad Popup -->
-    <div class="notepad-popup" id="notepad">
-        <button class="close-btn">✖</button>
-        <h2>Daily Targets (March 11 - 21, 2025)</h2>
-        <div class="day-section">
-            <h3>March 11 (Tuition Day)</h3>
-            <ul>
-                <li><input type="checkbox"> Electrostatics (2.5 hr: 1T, 1.5P)</li>
-                <li><input type="checkbox"> Heat & Thermo (3 hr: 1T, 2P)</li>
-                <li><input type="checkbox"> Functions (2 hr: 1T, 1P)</li>
-                <li><input type="checkbox"> Buffer (0.5 hr if needed)</li>
-            </ul>
-        </div>
-        <div class="day-section">
-            <h3>March 12 (Non-Tuition Day)</h3>
-            <ul>
-                <li><input type="checkbox"> Electrostatics (1.5 hr: 0.5T, 1P)</li>
-                <li><input type="checkbox"> Reaction Mechanism (4 hr: 1.5T, 2.5P)</li>
-                <li><input type="checkbox"> Heat & Thermo (4 hr: 1.5T, 2.5P)</li>
-                <li><input type="checkbox"> Functions (2 hr: 1T, 1P)</li>
-                <li><input type="checkbox"> Buffer (1 hr)</li>
-            </ul>
-        </div>
-        <div class="day-section">
-            <h3>March 13 (Non-Tuition Day)</h3>
-            <ul>
-                <li><input type="checkbox"> Heat & Thermo (2.5 hr: 1T, 1.5P)</li>
-                <li><input type="checkbox"> Gravitation (4 hr: 1.5T, 2.5P)</li>
-                <li><input type="checkbox"> Reaction Mechanism (4 hr: 1.5T, 2.5P)</li>
-                <li><input type="checkbox"> Determinants (1.5 hr: 0.5T, 1P)</li>
-                <li><input type="checkbox"> Buffer (1 hr)</li>
-            </ul>
-        </div>
-        <div class="day-section">
-            <h3>March 14 (Tuition Day)</h3>
-            <ul>
-                <li><input type="checkbox"> Heat & Thermo (2.5 hr: 1T, 1.5P)</li>
-                <li><input type="checkbox"> Gravitation (3 hr: 1T, 2P)</li>
-                <li><input type="checkbox"> Determinants (2 hr: 1T, 1P)</li>
-                <li><input type="checkbox"> Buffer (0.5 hr)</li>
-            </ul>
-        </div>
-        <div class="day-section">
-            <h3>March 15 (Non-Tuition Day)</h3>
-            <ul>
-                <li><input type="checkbox"> Gravitation (2.5 hr: 1T, 1.5P)</li>
-                <li><input type="checkbox"> Reaction Mechanism (4 hr: 1.5T, 2.5P)</li>
-                <li><input type="checkbox"> Limits (4 hr: 1.5T, 2.5P)</li>
-                <li><input type="checkbox"> Determinants (1.5 hr: 0.5T, 1P)</li>
-                <li><input type="checkbox"> Buffer (1 hr)</li>
-            </ul>
-        </div>
-        <div class="day-section">
-            <h3>March 16 (Non-Tuition Day)</h3>
-            <ul>
-                <li><input type="checkbox"> Gravitation (2.5 hr: 1T, 1.5P)</li>
-                <li><input type="checkbox"> S.H.M. (4 hr: 1.5T, 2.5P)</li>
-                <li><input type="checkbox"> Functions (4 hr: 1.5T, 2.5P)</li>
-                <li><input type="checkbox"> Limits (1 hr: 0.5T, 0.5P)</li>
-                <li><input type="checkbox"> Buffer (1 hr)</li>
-            </ul>
-        </div>
-        <div class="day-section">
-            <h3>March 17 (Tuition Day)</h3>
-            <ul>
-                <li><input type="checkbox"> S.H.M. (2.5 hr: 1T, 1.5P)</li>
-                <li><input type="checkbox"> Liquid Solutions (3 hr: 1T, 2P)</li>
-                <li><input type="checkbox"> Limits (2 hr: 1T, 1P)</li>
-                <li><input type="checkbox"> Buffer (0.5 hr)</li>
-            </ul>
-        </div>
-        <div class="day-section">
-            <h3>March 18 (Non-Tuition Day)</h3>
-            <ul>
-                <li><input type="checkbox"> S.H.M. (2.5 hr: 1T, 1.5P)</li>
-                <li><input type="checkbox"> Liquid Solutions (4 hr: 1.5T, 2.5P)</li>
-                <li><input type="checkbox"> Determinants (4 hr: 1.5T, 2.5P)</li>
-                <li><input type="checkbox"> Limits (1.5 hr: 0.5T, 1P)</li>
-                <li><input type="checkbox"> Buffer (1 hr)</li>
-            </ul>
-        </div>
-        <div class="day-section">
-            <h3>March 19 (Non-Tuition Day)</h3>
-            <ul>
-                <li><input type="checkbox"> S.H.M. (2.5 hr: 1T, 1.5P)</li>
-                <li><input type="checkbox"> Liquid Solutions (4 hr: 1.5T, 2.5P)</li>
-                <li><input type="checkbox"> Electrochemistry (4 hr: 1.5T, 2.5P)</li>
-                <li><input type="checkbox"> Functions (1 hr: 0.5T, 0.5P)</li>
-                <li><input type="checkbox"> Buffer (1 hr)</li>
-            </ul>
-        </div>
-        <div class="day-section">
-            <h3>March 20 (Non-Tuition Day)</h3>
-            <ul>
-                <li><input type="checkbox"> S.H.M. (0.5 hr: 0.5P)</li>
-                <li><input type="checkbox"> Functions (2 hr: 1T, 1P)</li>
-                <li><input type="checkbox"> Electrochemistry (4 hr: 1.5T, 2.5P)</li>
-                <li><input type="checkbox"> Determinants (3 hr: 1T, 2P)</li>
-                <li><input type="checkbox"> Liquid Solutions (1 hr: 0.5T, 0.5P)</li>
-                <li><input type="checkbox"> Limits (1.5 hr: 0.5T, 1P)</li>
-                <li><input type="checkbox"> Buffer (1 hr)</li>
-            </ul>
-        </div>
-        <div class="day-section">
-            <h3>March 21 (Non-Tuition Day)</h3>
-            <ul>
-                <li><input type="checkbox"> Functions (1 hr: 1P)</li>
-                <li><input type="checkbox"> Limits (1.5 hr: 0.5T, 1P)</li>
-                <li><input type="checkbox"> Electrochemistry (4 hr: 1.5T, 2.5P)</li>
-                <li><input type="checkbox"> Limits (1 hr: 0.5P)</li>
-                <li><input type="checkbox"> Buffer/Review (3 hr)</li>
-                <li><input type="checkbox"> Review weak areas (2 hr)</li>
-            </ul>
+        <div class="sun"></div>
+        <div class="trees"></div>
+        
+        <div class="container py-16">
+            <div class="text-center mb-12 fade-in">
+                <h1 class="text-4xl font-bold mb-4" style="color: #a0d9a0;">Forest Timetable Planner</h1>
+                <p class="text-xl mb-8" style="color: #8ab88a; max-width: 600px; margin-left: auto; margin-right: auto;">
+                    Create beautiful, AI-powered schedules to organize your day in harmony with nature
+                </p>
+            </div>
+            
+            <div class="card fade-in delay-1" style="max-width: 800px; margin-left: auto; margin-right: auto;">
+                <div class="card-header">
+                    <div class="card-title">
+                        <svg class="icon" viewBox="0 0 24 24">
+                            <path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                        </svg>
+                        AI-Powered Scheduling
+                    </div>
+                    <div class="card-description">
+                        Let our AI create the perfect schedule based on your needs and preferences
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="feature-card">
+                            <svg class="icon icon-lg feature-icon" viewBox="0 0 24 24">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
+                            <h3 class="feature-title">Time Management</h3>
+                            <p class="feature-description">Optimize your day with AI-generated schedules</p>
+                        </div>
+                        
+                        <div class="feature-card">
+                            <svg class="icon icon-lg feature-icon" viewBox="0 0 24 24">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="16" y1="2" x2="16" y2="6"></line>
+                                <line x1="8" y1="2" x2="8" y2="6"></line>
+                                <line x1="3" y1="10" x2="21" y2="10"></line>
+                            </svg>
+                            <h3 class="feature-title">Custom Planning</h3>
+                            <p class="feature-description">Tailor your schedule to your specific needs</p>
+                        </div>
+                        
+                        <div class="feature-card">
+                            <svg class="icon icon-lg feature-icon" viewBox="0 0 24 24">
+                                <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"></path>
+                                <polyline points="16 16 18 18 20 16"></polyline>
+                            </svg>
+                            <h3 class="feature-title">Forest Aesthetics</h3>
+                            <p class="feature-description">Beautiful nature-inspired design</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button class="btn btn-full" id="get-started-btn">
+                        <span>Get Started</span>
+                        <svg class="icon icon-sm ml-2" viewBox="0 0 24 24">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
-    <script>
-        const tuitionBox = document.getElementById('tuition-box');
-        const nonTuitionBox = document.getElementById('non-tuition-box');
-        const introContainer = document.getElementById('intro-container');
-        const tuitionSchedule = document.getElementById('tuition-schedule');
-        const nonTuitionSchedule = document.getElementById('non-tuition-schedule');
-        const notepadBtn = document.getElementById('notepad-btn');
-        const notepad = document.getElementById('notepad');
-        const closeButtons = document.querySelectorAll('.close-btn');
+    <!-- Setup Page -->
+    <div class="setup-page" id="setup-page">
+        <div class="bg-overlay" style="background-image: url('https://www.shutterstock.com/image-illustration/summer-forest-scene-glade-260nw-2325634191.jpg');">
+            <div class="bg-filter"></div>
+        </div>
+        <div class="sun"></div>
+        <div class="trees"></div>
+        
+        <div class="container py-16 min-h-screen flex justify-center items-center">
+            <div class="card fade-in" style="width: 100%; max-width: 400px;">
+                <div class="card-header">
+                    <div class="flex justify-center mb-4">
+                        <div style="width: 64px; height: 64px; background-color: #2a3a2a; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                            <svg class="icon icon-lg" style="color: #a0d9a0;" viewBox="0 0 24 24">
+                                <path d="M12 2l.642.005.616.017.299.013.579.034.553.046c4.687.455 6.65 2.333 7.166 6.747l.046.553.034.579.013.299.017.616L22 12l-.005.642-.017.616-.013.299-.034.579-.046.553c-.455 4.687-2.333 6.65-6.747 7.166l-.553.046-.579.034-.299.013-.616.017L12 22l-.642-.005-.616-.017-.299-.013-.579-.034-.553-.046c-4.687-.455-6.65-2.333-7.166-6.747l-.046-.553-.034-.579-.013-.299-.017-.616L1 12l.005-.642.017-.616.013-.299.034-.579.046-.553c.455-4.687 2.333-6.65 6.747-7.166l.553-.046.579-.034.299-.013.616-.017L12 2zm0 8a2 2 0 100 4 2 2 0 000-4z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="card-title text-center">AI Configuration</div>
+                    <div class="card-description text-center">
+                        Connect to an AI model to power your timetable generation
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div id="setup-error" class="alert alert-error hidden"></div>
+                    
+                    <div class="form-group">
+                        <label for="api-key" class="form-label flex items-center gap-1">
+                            <svg class="icon icon-sm" viewBox="0 0 24 24">
+                                <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path>
+                            </svg>
+                            API Key
+                        </label>
+                        <input type="password" id="api-key" class="form-input" placeholder="sk-...">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="base-url" class="form-label flex items-center gap-1">
+                            <svg class="icon icon-sm" viewBox="0 0 24 24">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="2" y1="12" x2="22" y2="12"></line>
+                                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                            </svg>
+                            Base URL (Optional)
+                        </label>
+                        <input type="text" id="base-url" class="form-input" placeholder="https://api.openai.com/v1">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="model-name" class="form-label flex items-center gap-1">
+                            <svg class="icon icon-sm" viewBox="0 0 24 24">
+                                <path d="M12 2l.642.005.616.017.299.013.579.034.553.046c4.687.455 6.65 2.333 7.166 6.747l.046.553.034.579.013.299.017.616L22 12l-.005.642-.017.616-.013.299-.034.579-.046.553c-.455 4.687-2.333 6.65-6.747 7.166l-.553.046-.579.034-.299.013-.616.017L12 22l-.642-.005-.616-.017-.299-.013-.579-.034-.553-.046c-4.687-.455-6.65-2.333-7.166-6.747l-.046-.553-.034-.579-.013-.299-.017-.616L1 12l.005-.642.017-.616.013-.299.034-.579.046-.553c.455-4.687 2.333-6.65 6.747-7.166l.553-.046.579-.034.299-.013.616-.017L12 2zm0 8a2 2 0 100 4 2 2 0 000-4z"></path>
+</svg>
+Model Name (Optional)
+</label>
+<input type="text" id="model-name" class="form-input" placeholder="gpt-3.5-turbo">
+</div>
+</div>
+<div class="card-footer">
+<button class="btn btn-full" id="save-api-settings-btn">
+<span>Save Settings</span>
+<svg class="icon icon-sm ml-2" viewBox="0 0 24 24">
+<path d="M5 13l4 4L19 7"></path>
+</svg>
+</button>
+<div id="save-spinner" class="hidden mt-2 flex justify-center">
+<div class="spinner"></div> <span>Saving...</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Planner Page -->
+<div class="planner-page" id="planner-page">
+    <div class="bg-overlay" style="background-image: url('https://images.unsplash.com/photo-1517842063299-b5c077950f53?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');">
+        <div class="bg-filter"></div>
+    </div>
+    <div class="moon"></div>
+    <div class="trees"></div>
+    
+    <div class="container py-8">
+        <div class="card fade-in mb-8">
+            <div class="card-header">
+                <div class="card-title">
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect>
+                        <path d="M2 9h20M4 15h16"></path>
+                    </svg>
+                    Timetable Planner
+                </div>
+                <div class="card-description">
+                    Generate your personalized daily timetable using AI
+                </div>
+            </div>
+            <div class="card-content">
+                <div id="planner-error" class="alert alert-error hidden"></div>
+                
+                <div class="form-group">
+                    <label for="focus" class="form-label">What is your main focus for today?</label>
+                    <input type="text" id="focus" class="form-input" placeholder="e.g., Work on project X, Study for exams">
+                </div>
+                
+                <div class="form-group">
+                    <label for="duration" class="form-label">How many hours would you like your plan to cover?</label>
+                    <input type="number" id="duration" class="form-input" min="1" max="24" value="8">
+                </div>
+                
+                <div class="form-group">
+                    <label for="constraints" class="form-label">Are there any specific times or activities you want to include or exclude? (Optional)</label>
+                    <textarea id="constraints" class="form-textarea" placeholder="e.g., Include a 1-hour lunch break at 1 PM, Avoid meetings before 10 AM"></textarea>
+                </div>
+                
+                <button class="btn btn-full" id="generate-timetable-btn">
+                    <span>Generate Timetable</span>
+                    <svg class="icon icon-sm ml-2" viewBox="0 0 24 24">
+                        <path d="M3 12a9 9 0 1018 0 9 9 0 00-18 0zM12 7v5l3 3"></path>
+                    </svg>
+                </button>
+                <div id="generate-spinner" class="hidden mt-2 flex justify-center">
+                    <div class="spinner"></div> <span>Generating...</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card fade-in" id="timetable-results" style="display: none;">
+            <div class="card-header">
+                <div class="card-title">
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <list></list>
+                    </svg>
+                    Your Timetable
+                </div>
+                <div class="card-description">
+                    Here is your AI-generated timetable for today
+                </div>
+            </div>
+            <div class="card-content">
+                <ul id="timetable-list" class="mb-4">
+                    <!-- Timetable items will be added here -->
+                </ul>
+            </div>
+            <div class="card-footer">
+                <button class="btn btn-outline" id="regenerate-btn">
+                    <svg class="icon icon-sm mr-2" viewBox="0 0 24 24">
+                        <path d="M4 12a8 8 0 0116 0M16 6l-4 4 4 4"></path>
+                    </svg>
+                    Regenerate
+                </button>
+                <button class="btn ml-2" id="export-btn">
+                    <svg class="icon icon-sm mr-2" viewBox="0 0 24 24">
+                        <path d="M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 11l5 5 5-5M12 4v12"></path>
+                    </svg>
+                    Export
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
-        // Ensure intro boxes are clickable
-        tuitionBox.addEventListener('click', () => {
-            introContainer.style.display = 'none';
-            tuitionSchedule.classList.add('active');
+<div class="confetti-container">
+    <!-- Confetti elements will be added here -->
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const homePage = document.getElementById('home-page');
+        const setupPage = document.getElementById('setup-page');
+        const plannerPage = document.getElementById('planner-page');
+        const getStartedBtn = document.getElementById('get-started-btn');
+        const saveApiSettingsBtn = document.getElementById('save-api-settings-btn');
+        const setupError = document.getElementById('setup-error');
+        const saveSpinner = document.getElementById('save-spinner');
+        const apiKeyInput = document.getElementById('api-key');
+        const baseUrlInput = document.getElementById('base-url');
+        const modelNameInput = document.getElementById('model-name');
+        const generateTimetableBtn = document.getElementById('generate-timetable-btn');
+        const plannerError = document.getElementById('planner-error');
+        const focusInput = document.getElementById('focus');
+        const durationInput = document.getElementById('duration');
+        const constraintsInput = document.getElementById('constraints');
+        const generateSpinner = document.getElementById('generate-spinner');
+        const timetableResults = document.getElementById('timetable-results');
+        const timetableList = document.getElementById('timetable-list');
+        const regenerateBtn = document.getElementById('regenerate-btn');
+        const exportBtn = document.getElementById('export-btn');
+        const bgOverlay = document.querySelector('.home-page .bg-overlay');
+        const fireflyContainer = document.createElement('div');
+        fireflyContainer.classList.add('firefly-container');
+        document.body.appendChild(fireflyContainer);
+
+        let aiSettings = loadSettings();
+
+        function showPage(page) {
+            homePage.classList.remove('active');
+            setupPage.classList.remove('active');
+            plannerPage.classList.remove('active');
+            page.classList.add('active');
+
+            if (page === plannerPage) {
+                startLeafAnimation();
+            } else {
+                stopLeafAnimation();
+            }
+
+            if (page === homePage) {
+                startFireflyAnimation();
+                bgOverlay.style.backgroundImage = ''; // Reset background for homepage
+            } else if (page === setupPage) {
+                stopFireflyAnimation();
+                bgOverlay.style.backgroundImage = "url('https://www.shutterstock.com/image-illustration/summer-forest-scene-glade-260nw-2325634191.jpg')";
+            } else if (page === plannerPage) {
+                stopFireflyAnimation();
+                bgOverlay.style.backgroundImage = "url('https://images.unsplash.com/photo-1517842063299-b5c077950f53?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')";
+            }
+        }
+
+        getStartedBtn.addEventListener('click', () => {
+            showPage(setupPage);
+            if (aiSettings && aiSettings.apiKey) {
+                showPage(plannerPage);
+            }
         });
 
-        nonTuitionBox.addEventListener('click', () => {
-            introContainer.style.display = 'none';
-            nonTuitionSchedule.classList.add('active');
+        if (aiSettings && aiSettings.apiKey) {
+            apiKeyInput.value = aiSettings.apiKey;
+            baseUrlInput.value = aiSettings.baseUrl || '';
+            modelNameInput.value = aiSettings.modelName || '';
+        }
+
+        saveApiSettingsBtn.addEventListener('click', async () => {
+            const apiKey = apiKeyInput.value.trim();
+            const baseUrl = baseUrlInput.value.trim();
+            const modelName = modelNameInput.value.trim();
+
+            if (!apiKey) {
+                setupError.textContent = 'Please enter your API Key.';
+                setupError.classList.remove('hidden');
+                return;
+            }
+
+            setupError.classList.add('hidden');
+            saveSpinner.classList.remove('hidden');
+
+            // Simulate API key verification (replace with actual verification if needed)
+            await new Promise(resolve => setTimeout(resolve, 1500));
+
+            aiSettings = { apiKey, baseUrl, modelName };
+            saveSettings(aiSettings);
+            saveSpinner.classList.add('hidden');
+            showPage(plannerPage);
         });
 
-        // Ensure notepad button is clickable
-        notepadBtn.addEventListener('click', () => {
-            introContainer.style.display = 'none';
-            notepad.classList.add('active');
-        });
+        generateTimetableBtn.addEventListener('click', async () => {
+            const focus = focusInput.value.trim();
+            const duration = parseInt(durationInput.value);
+            const constraints = constraintsInput.value.trim();
 
-        // Ensure close buttons are clickable
-        closeButtons.forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const parent = btn.closest('.full-schedule') || btn.closest('.notepad-popup');
-                parent.classList.remove('active');
-                introContainer.style.display = 'flex';
+            if (!focus) {
+                plannerError.textContent = 'Please enter the main focus for your day.';
+                plannerError.classList.remove('hidden');
+                return;
+            }
+
+            plannerError.classList.add('hidden');
+            generateSpinner.classList.remove('hidden');
+            timetableResults.style.display = 'none';
+            timetableList.innerHTML = '';
+
+            // Simulate AI timetable generation
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+            const generatedTimetable = generateFakeTimetable(focus, duration, constraints);
+
+            generateSpinner.classList.add('hidden');
+            timetableResults.style.display = 'block';
+
+            generatedTimetable.forEach(task => {
+                const listItem = document.createElement('li');
+                listItem.classList.add('task-item', 'fade-in');
+                listItem.innerHTML = `
+                    <div class="task-header">
+                        <h3 class="task-title">${task.activity}</h3>
+                        <span class="task-time">${task.time}</span>
+                    </div>
+                    <p class="task-details">${task.description || ''}</p>
+                    ${task.badge ? `<span class="badge badge-${task.badge}">${task.badge.toUpperCase()}</span>` : ''}
+                `;
+                timetableList.appendChild(listItem);
             });
+
+            triggerConfetti();
         });
 
-        // Checkbox click handler for strike-off feature
-        document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
-            checkbox.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const row = checkbox.closest('tr') || checkbox.closest('li');
-                if (checkbox.checked) {
-                    row.classList.add('completed');
-                } else {
-                    row.classList.remove('completed');
-                }
-            });
+        regenerateBtn.addEventListener('click', () => {
+            generateTimetableBtn.click();
         });
-    </script>
+
+        exportBtn.addEventListener('click', () => {
+            // Implement export functionality (e.g., download as PDF)
+            alert('Export functionality will be implemented soon!');
+        });
+
+        function generateFakeTimetable(focus, duration, constraints) {
+            const activities = ["Focused Work", "Study Session", "Creative Thinking", "Break", "Meal Time", "Meeting", "Exercise"];
+            const descriptions = ["Deep work to achieve key milestones.", "Reviewing materials and practicing concepts.", "Brainstorming new ideas and solutions.", "Relax and recharge.", "Enjoy a nutritious meal.", "Collaborate with team members.", "Physical activity for well-being."];
+            const badges = ["work", "study", null, "break", "meal", "work", "break"];
+            const timetable = [];
+            let currentTime = 8; // Starting time
+
+            for (let i = 0; i < duration; i++) {
+                const activityIndex = Math.floor(Math.random() * activities.length);
+                const startTime = `${currentTime}:00`;
+                currentTime++;
+                const endTime = `${currentTime}:00`;
+                timetable.push({
+                    time: `${startTime} - ${endTime}`,
+                    activity: activities[(i * 3 + activityIndex) % activities.length] + (i === 0 ? ` on ${focus}` : ''),
+                    description: descriptions[(i * 2 + activityIndex) % descriptions.length],
+                    badge: badges[(i + activityIndex) % badges.length]
+                });
+                if (currentTime > 23) break;
+            }
+            return timetable;
+        }
+
+        function saveSettings(settings) {
+            localStorage.setItem('ai_settings', JSON.stringify(settings));
+        }
+
+        function loadSettings() {
+            const settings = localStorage.getItem('ai_settings');
+            return settings ? JSON.parse(settings) : null;
+        }
+
+        // Firefly Animation
+        function createFirefly() {
+            const firefly = document.createElement('div');
+            firefly.classList.add('firefly');
+            const x = Math.random() * window.innerWidth;
+            const y = Math.random() * window.innerHeight;
+            const size = Math.random() * 5 + 5;
+            const speed = Math.random() * 1 + 0.5;
+            const flickerDelay = Math.random() * 3000 + 500;
+
+            firefly.style.left = `${x}px`;
+            firefly.style.top = `${y}px`;
+            firefly.style.width = `${size}px`;
+            firefly.style.height = `${size}px`;
+            firefly.style.animationDuration = `${speed}s`;
+            firefly.style.animationDelay = `${Math.random() * 5}s`;
+
+            fireflyContainer.appendChild(firefly);
+
+            setTimeout(() => {
+                firefly.style.opacity = 1;
+            }, 50);
+
+            setTimeout(() => {
+                firefly.remove();
+            }, 6000); // Keep for some time
+        }
+
+        let fireflyInterval;
+
+        function startFireflyAnimation() {
+            if (!fireflyInterval) {
+                fireflyInterval = setInterval(createFirefly, 1000);
+            }
+        }
+
+        function stopFireflyAnimation() {
+            clearInterval(fireflyInterval);
+            fireflyInterval = null;
+            fireflyContainer.innerHTML = ''; // Clear existing fireflies
+        }
+
+        // Leaf Animation
+        let leafInterval;
+
+        function createLeaf() {
+            const leaf = document.createElement('div');
+            leaf.classList.add('leaf');
+            const leafType = Math.random() > 0.5 ? '🍁' : '🍂';
+            leaf.textContent = leafType;
+            const startX = Math.random() * window.innerWidth;
+            const startY = -20;
+            const endY = window.innerHeight + 20;
+            const duration = Math.random() * 5 + 3;
+            const scale = Math.random() * 0.5 + 0.8;
+            const rotation = Math.random() * 360;
+
+            leaf.style.left = `${startX}px`;
+            leaf.style.top = `${startY}px`;
+            leaf.style.fontSize = `${20 * scale}px`;
+            leaf.style.transform = `rotate(${rotation}deg)`;
+            leaf.style.opacity = 0;
+            leaf.style.transition = `top ${duration}s linear, opacity 1s ease-in`;
+
+            document.body.appendChild(leaf);
+
+            setTimeout(() => {
+                leaf.style.top = `${endY}px`;
+                leaf.style.opacity = 0.7;
+            }, 50);
+
+            setTimeout(() => {
+                leaf.remove();
+            }, duration * 1000 + 1000);
+        }
+
+        function startLeafAnimation() {
+            if (!leafInterval) {
+                leafInterval = setInterval(createLeaf, 800);
+            }
+        }
+
+        function stopLeafAnimation() {
+            clearInterval(leafInterval);
+            leafInterval = null;
+            document.querySelectorAll('.leaf').forEach(leaf => leaf.remove());
+        }
+
+        // Confetti Animation
+        function createConfetti() {
+            const confetti = document.createElement('div');
+            confetti.classList.add('confetti');
+            const x = Math.random() * window.innerWidth;
+            const startY = -20;
+            const endY = window.innerHeight + 20;
+            const size = Math.random() * 10 + 5;
+            const color = `hsl(${Math.random() * 360}, 70%, 60%)`;
+            const duration = Math.random() * 3 + 2;
+            const rotation = Math.random() * 360;
+
+            confetti.style.backgroundColor = color;
+            confetti.style.width = `${size}px`;
+            confetti.style.height = `${size}px`;
+            confetti.style.left = `${x}px`;
+            confetti.style.top = `${startY}px`;
+            confetti.style.transform = `rotate(${rotation}deg) scale(0)`;
+            confetti.style.opacity = 1;
+            confetti.style.transition = `top ${duration}s ease-out, transform 0.2s ease-in-out, opacity ${duration * 0.8}s ease-in`;
+
+            document.querySelector('.confetti-container').appendChild(confetti);
+
+            setTimeout(() => {
+                confetti.style.top = `${endY}px`;
+                confetti.style.transform = `rotate(${rotation + 180}deg) scale(1)`;
+                confetti.style.opacity = 0;
+            }, 50);
+
+            setTimeout(() => {
+                confetti.remove();
+            }, duration * 1000 + 500);
+        }
+
+        function triggerConfetti() {
+            for (let i = 0; i < 100; i++) {
+                setTimeout(createConfetti, i * 20);
+            }
+        }
+
+        startFireflyAnimation();
+    });
+</script>
 </body>
 </html>
