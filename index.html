@@ -639,11 +639,11 @@
         }
 
         /* Page Specific Styles */
-        .home-page, .setup-page, .planner-page {
+        .home-page, .planner-page {
             display: none;
         }
 
-        .home-page.active, .setup-page.active, .planner-page.active {
+        .home-page.active, .planner-page.active {
             display: block;
         }
 
@@ -779,7 +779,8 @@
         </div>
     </div>
 
-    <!-- Setup Page -->
+    <!-- Setup Page (removed - AI config is now stored in Vercel env vars) -->
+    <!--
     <div class="setup-page" id="setup-page">
         <div class="bg-overlay" style="background-image: url('https://www.shutterstock.com/image-illustration/summer-forest-scene-glade-260nw-2325634191.jpg');">
             <div class="bg-filter"></div>
@@ -851,6 +852,7 @@ Model Name (Optional)
 </div>
 </div>
 </div>
+    -->
 <!-- Planner Page -->
 <div class="planner-page" id="planner-page">
     <div class="bg-overlay" style="background-image: url('https://images.unsplash.com/photo-1517842063299-b5c077950f53?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');">
@@ -945,15 +947,8 @@ Model Name (Optional)
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const homePage = document.getElementById('home-page');
-        const setupPage = document.getElementById('setup-page');
         const plannerPage = document.getElementById('planner-page');
         const getStartedBtn = document.getElementById('get-started-btn');
-        const saveApiSettingsBtn = document.getElementById('save-api-settings-btn');
-        const setupError = document.getElementById('setup-error');
-        const saveSpinner = document.getElementById('save-spinner');
-        const apiKeyInput = document.getElementById('api-key');
-        const baseUrlInput = document.getElementById('base-url');
-        const modelNameInput = document.getElementById('model-name');
         const generateTimetableBtn = document.getElementById('generate-timetable-btn');
         const plannerError = document.getElementById('planner-error');
         const focusInput = document.getElementById('focus');
@@ -964,76 +959,31 @@ Model Name (Optional)
         const timetableList = document.getElementById('timetable-list');
         const regenerateBtn = document.getElementById('regenerate-btn');
         const exportBtn = document.getElementById('export-btn');
-        const bgOverlay = document.querySelector('.home-page .bg-overlay');
         const fireflyContainer = document.createElement('div');
         fireflyContainer.classList.add('firefly-container');
         document.body.appendChild(fireflyContainer);
 
-        let aiSettings = loadSettings();
-
         function showPage(page) {
             homePage.classList.remove('active');
-            setupPage.classList.remove('active');
             plannerPage.classList.remove('active');
             page.classList.add('active');
 
             if (page === plannerPage) {
+                stopFireflyAnimation();
                 startLeafAnimation();
             } else {
                 stopLeafAnimation();
-            }
-
-            if (page === homePage) {
                 startFireflyAnimation();
-                bgOverlay.style.backgroundImage = ''; // Reset background for homepage
-            } else if (page === setupPage) {
-                stopFireflyAnimation();
-                bgOverlay.style.backgroundImage = "url('https://www.shutterstock.com/image-illustration/summer-forest-scene-glade-260nw-2325634191.jpg')";
-            } else if (page === plannerPage) {
-                stopFireflyAnimation();
-                bgOverlay.style.backgroundImage = "url('https://images.unsplash.com/photo-1517842063299-b5c077950f53?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')";
             }
         }
 
         getStartedBtn.addEventListener('click', () => {
-            showPage(setupPage);
-            if (aiSettings && aiSettings.apiKey) {
-                showPage(plannerPage);
-            }
-        });
-
-        if (aiSettings && aiSettings.apiKey) {
-            apiKeyInput.value = aiSettings.apiKey;
-            baseUrlInput.value = aiSettings.baseUrl || '';
-            modelNameInput.value = aiSettings.modelName || '';
-        }
-
-        saveApiSettingsBtn.addEventListener('click', async () => {
-            const apiKey = apiKeyInput.value.trim();
-            const baseUrl = baseUrlInput.value.trim();
-            const modelName = modelNameInput.value.trim();
-
-            if (!apiKey) {
-                setupError.textContent = 'Please enter your API Key.';
-                setupError.classList.remove('hidden');
-                return;
-            }
-
-            setupError.classList.add('hidden');
-            saveSpinner.classList.remove('hidden');
-
-            // Simulate API key verification (replace with actual verification if needed)
-            await new Promise(resolve => setTimeout(resolve, 1500));
-
-            aiSettings = { apiKey, baseUrl, modelName };
-            saveSettings(aiSettings);
-            saveSpinner.classList.add('hidden');
             showPage(plannerPage);
         });
 
         generateTimetableBtn.addEventListener('click', async () => {
             const focus = focusInput.value.trim();
-            const duration = parseInt(durationInput.value);
+            const duration = parseInt(durationInput.value, 10);
             const constraints = constraintsInput.value.trim();
 
             if (!focus) {
@@ -1044,33 +994,90 @@ Model Name (Optional)
 
             plannerError.classList.add('hidden');
             generateSpinner.classList.remove('hidden');
+            generateTimetableBtn.disabled = true;
             timetableResults.style.display = 'none';
             timetableList.innerHTML = '';
 
-            // Simulate AI timetable generation
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            try {
+                const timetable = await requestAiTimetable({ focus, duration, constraints });
+                renderTimetable(timetable);
+                triggerConfetti();
+            } catch (err) {
+                const message = err instanceof Error ? err.message : 'Unable to generate timetable with AI.';
+                plannerError.textContent = `${message} Showing a sample timetable instead.`;
+                plannerError.classList.remove('hidden');
 
-            const generatedTimetable = generateFakeTimetable(focus, duration, constraints);
+                const fallbackTimetable = generateFakeTimetable(focus, duration, constraints);
+                renderTimetable(fallbackTimetable);
+                triggerConfetti();
+            } finally {
+                generateSpinner.classList.add('hidden');
+                generateTimetableBtn.disabled = false;
+            }
+        });
 
-            generateSpinner.classList.add('hidden');
-            timetableResults.style.display = 'block';
-
-            generatedTimetable.forEach(task => {
-                const listItem = document.createElement('li');
-                listItem.classList.add('task-item', 'fade-in');
-                listItem.innerHTML = `
-                    <div class="task-header">
-                        <h3 class="task-title">${task.activity}</h3>
-                        <span class="task-time">${task.time}</span>
-                    </div>
-                    <p class="task-details">${task.description || ''}</p>
-                    ${task.badge ? `<span class="badge badge-${task.badge}">${task.badge.toUpperCase()}</span>` : ''}
-                `;
-                timetableList.appendChild(listItem);
+        async function requestAiTimetable({ focus, duration, constraints }) {
+            const response = await fetch('/api/generate-timetable', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ focus, duration, constraints })
             });
 
-            triggerConfetti();
-        });
+            const data = await response.json().catch(() => null);
+
+            if (!response.ok) {
+                const message = data && (data.error || data.message) ? (data.error || data.message) : `Request failed (${response.status})`;
+                throw new Error(message);
+            }
+
+            if (!data || !Array.isArray(data.timetable)) {
+                throw new Error('AI response was not in the expected format.');
+            }
+
+            return data.timetable;
+        }
+
+        function renderTimetable(timetable) {
+            timetableResults.style.display = 'block';
+            timetableList.innerHTML = '';
+
+            timetable.forEach(task => {
+                const listItem = document.createElement('li');
+                listItem.classList.add('task-item', 'fade-in');
+
+                const badge = normalizeBadge(task.badge);
+                const activity = escapeHtml(task.activity || '');
+                const time = escapeHtml(task.time || '');
+                const description = escapeHtml(task.description || '');
+
+                listItem.innerHTML = `
+                    <div class="task-header">
+                        <h3 class="task-title">${activity}</h3>
+                        <span class="task-time">${time}</span>
+                    </div>
+                    <p class="task-details">${description}</p>
+                    ${badge ? `<span class="badge badge-${badge}">${badge.toUpperCase()}</span>` : ''}
+                `;
+
+                timetableList.appendChild(listItem);
+            });
+        }
+
+        function normalizeBadge(badge) {
+            if (badge === null || badge === undefined) return null;
+            const value = String(badge).toLowerCase();
+            return ['work', 'study', 'break', 'meal'].includes(value) ? value : null;
+        }
+
+        function escapeHtml(value) {
+            return String(value).replace(/[&<>"']/g, (ch) => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            }[ch]));
+        }
 
         regenerateBtn.addEventListener('click', () => {
             generateTimetableBtn.click();
@@ -1104,14 +1111,6 @@ Model Name (Optional)
             return timetable;
         }
 
-        function saveSettings(settings) {
-            localStorage.setItem('ai_settings', JSON.stringify(settings));
-        }
-
-        function loadSettings() {
-            const settings = localStorage.getItem('ai_settings');
-            return settings ? JSON.parse(settings) : null;
-        }
 
         // Firefly Animation
         function createFirefly() {
